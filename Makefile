@@ -19,24 +19,24 @@ help:
 	@echo "    clean_build          Delete build directory"
 	@echo "    help                 Show this help"
 
-bitstream: bd src/hdl/*.vhd src/xdc/*.xdc
-ifdef DCP
-	scripts/run_tcl build_design --incremental $(DCP) --run_to write_bitstream
-else
-	scripts/run_tcl build_design --run_to write_bitstream
+synth opt place route bitstream: | bd
+	$(eval ARGS = --run_to $@)
+ifdef START_FROM
+	$(eval ARGS = $(ARGS) --start_from $(START_FROM))
 endif
-
-synth: | bd
-	scripts/run_tcl build_design --run_to synth
-
-opt: | bd
-	scripts/run_tcl build_design --run_to opt
-
-place: | bd
-	scripts/run_tcl build_design --run_to place
-
-route: | bd
-	scripts/run_tcl build_design --run_to route
+ifdef DCP
+	$(eval ARGS = $(ARGS) --incremental $(DCP))
+endif
+ifeq ($(DEBUG), 1)
+	$(eval ARGS = $(ARGS) --debug)
+endif
+ifeq ($(FAST), 1)
+	$(eval ARGS = $(ARGS) --fast)
+endif
+ifeq ($(NO_REPORT), 1)
+	$(eval ARGS = $(ARGS) --no_report)
+endif
+	scripts/run_tcl build_design $(ARGS)
 
 program_device: bitstream
 	scripts/run_tcl program_device

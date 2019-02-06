@@ -23,8 +23,8 @@ if { $::argc > 0 } {
       "--debug_constraints" { incr i; set debug_constraints [split [lindex $::argv $i] ","] }
       "--ip_repo_paths"     { incr i; set ip_repo_paths [split [lindex $::argv $i] ","] }
       "--no_report"         { set create_reports 0 }
-      "--no_debug"          { set debug 0 }
-      "--fast"              { set create_reports 0; set debug 0; set write_dcp 0 }
+      "--debug"             { set debug 1 }
+      "--fast"              { set create_reports 0; set write_dcp 0 }
       "--run_to"            { incr i; set run_to [string tolower [lindex $::argv $i]] }
       "--start_from"        { incr i; set start_from [string tolower [lindex $::argv $i]] }
       "--incremental"       { incr i; set incr_checkpoint [lindex $::argv $i] }
