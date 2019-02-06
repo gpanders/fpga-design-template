@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ $# -eq 0 ]; then
+  echo "Usage: $0 module"
+  echo ""
+  echo "Available modules:"
+  for mod in sim/*; do
+    echo "  $(basename $mod)"
+  done
+  echo ""
+  exit 1
+fi
+
+module="$1"
+pushd sim/$module > /dev/null
+prj_file="$(echo *.prj)"
+top_file="$(basename $(echo *.vhd))"
+top=${top_file%.*}
+
+xelab --prj $prj_file --debug typical --nolog $top
+xsim $top --log $top.log --wdb $top.wdb --gui --tclbatch ../../scripts/setup_sim.tcl
+
+# Clean up
+rm -rf webtalk* xelab*
+popd > /dev/null

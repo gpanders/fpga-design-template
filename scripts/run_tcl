@@ -1,0 +1,49 @@
+#!/bin/sh
+
+shopt -s extglob
+set -e
+
+# Change to this script's parent directory
+SCRIPT_DIR=$(dirname $(readlink -f "$0")"")
+cd $SCRIPT_DIR && cd ..
+
+if [ ! -f settings.conf ]; then
+  echo "ERROR: Missing settings.conf file!"
+  exit 1
+fi
+
+source ./settings.conf
+
+if [ -z "$VIVADO" ]; then
+  echo "ERROR: Missing path to Vivado installation in settings.conf"
+  exit 1
+fi
+
+if [ -z "$VIVADO_OPTS" ]; then
+  VIVADO_OPTS="-nojournal -log build.log"
+fi
+
+if [ -z "$PART" ]; then
+  echo "ERROR: Missing part name in settings.conf"
+  exit 1
+fi
+
+if [ -z "$TOP" ]; then
+  echo "ERROR: Missing top module name in settings.conf"
+  exit 1
+fi
+
+# Clean up whitespace from list variables
+SYNTH_CONSTRAINTS=${SYNTH_CONSTRAINTS##+( )}
+IMPL_CONSTRAINTS=${IMPL_CONSTRAINTS##+( )}
+DEBUG_CONSTRAINTS=${DEBUG_CONSTRAINTS##+( )}
+IP_REPO_PATHS=${IP_REPO_PATHS##+( )}
+
+TCLARGS="--name $PROJECT_NAME --part $PART --top $TOP"
+TCLARGS="$TCLARGS --synth_constraints ${SYNTH_CONSTRAINTS//+( )/,}"
+TCLARGS="$TCLARGS --impl_constraints ${IMPL_CONSTRAINTS//+( )/,}"
+TCLARGS="$TCLARGS --debug_constraints ${DEBUG_CONSTRAINTS//+( )/,}"
+TCLARGS="$TCLARGS --ip_repo_paths ${IP_REPO_PATHS//+( )/,}"
+TCLARGS="$TCLARGS ${@:2}"
+
+${VIVADO} ${VIVADO_OPTS} -mode tcl -source scripts/tcl/$1.tcl -notrace -tclargs $TCLARGS

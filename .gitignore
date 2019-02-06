@@ -1,0 +1,29 @@
+# Vivado outputs
+.cache
+.Xil
+*.jou
+*.log
+*.dcp
+*.str
+*.wdb
+*.pb
+xsim.dir
+
+# Build outputs
+build/
+bitstream/
+
+# Location to create project if desired
+proj/
+
+ip/*/*
+!ip/*/*.xci
+!ip/*.xcix
+!ip/managed_ip_project/managed_ip_project.xpr
+
+# Block design output
+src/bd/
+
+# Archived output of project and block design
+project.tar.gz
+bd.tar.gz

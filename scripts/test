@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+rc=0
+failures=0
+for entity in sim/*; do
+  pushd $entity > /dev/null
+  prj_file="$(echo *.prj)"
+  top_file="$(basename $(echo *.vhd))"
+  top=${top_file%.*}
+  xelab --prj $prj_file --nolog $top
+  xsim $top --log $top.log -R
+  if grep "Failure" $top.log > /dev/null; then
+    rc=1
+    failures=$(($failures + 1))
+  fi
+
+  # Clean up
+  rm -rf webtalk* xelab* *.log *.wdb *.jou xsim.dir .Xil
+  popd > /dev/null
+done
+
+if [ $failures -eq 0 ]; then
+  echo "All tests passed!"
+else
+  echo "$failures tests failed."
+fi
+
+exit $rc
