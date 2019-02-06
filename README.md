@@ -1,104 +1,99 @@
 # FPGA Design Template
 
-## Directory structure
+FPGA project design template for use with Xilinx Vivado.
 
-### src
+## Introduction
 
-Contains subdirectories `hdl`, `bd`, and `xdc`. The `hdl` directory can
-(optionally) be further subdivided into `vhdl`, `verilog`, and `sv` directories
-if the design contains sources using multiple languages.
+This project serves as a template for Xilinx based FPGA projects. Currently,
+only Linux is supported.
 
-**NOTE:** It is _strongly_ recommended to generate the block design as
-Out-of-Context per Block Design from within the dummy project. Then copy all of
-the generated products to the `src/bd` directory. This allows the Tcl build
-script to simply read in the block design without regenerating anything.
-Alternatively, you can generate the block design as Global and add the
-following to the Tcl build script after the `read_bd` command:
+The motivation of this project was to get away from being constrained by
+Vivado's clunky GUI. While the Vivado GUI is often useful and sometimes
+necessary, most of the time it is not, and there are significant speed and
+productivity improvements to be had by moving to a scripted command-line flow.
 
-    generate_target all [get_files src/bd/<your_bd_name>/<your_bd_name>.bd]
+Organizing the project as a software project allows us to leverage many of the
+tools that software developers have been using for years, such as version
+control, release tagging, and automated testing.
 
-Depending on the size and complexity of your block design, this will add
-considerable runtime to the build.
+## Design Flow
 
-### ip
+Define your project settings such as project name, part, top level module,
+and constraints files in `settings.conf`.
 
-Contains the `managed_ip_project` from which the user can generate any required
-IP for the design. Using Core Containers is recommended, but not required. When
-IP is required, commit the entire IP folder (or .xcix file if using core
-containers) for each IP, as well as the `ip_user_files` directory.
+The `Makefile` is the entry point for executing all tasks. Running `make help`
+will provide a list of all available targets. Each target in turn sources a 
+Tcl script (found in the `scripts/tcl` directory) which uses the settings
+specified in `settings.conf` to build the design.
 
-### sim
+The Tcl scripts look for all source files under the `src` directory.
+HDL design files should go under `src/hdl/`, block designs should go in
+`src/bd/<bd_name>/`, and constraints under `src/xdc/`.
 
-Contains all simulation and test bench files.
+*Constraints file are not read as globs and must be explicitly specified in the
+settings.conf file*. This is because it is Xilinx's recommended best practice
+to separate synthesis constraints from implementation constraints (see [Vivado
+User Guide: Using
+Constraints](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2018_3/ug903-vivado-using-constraints.pdf)).
+All other source files are read as globs, meaning if the file exists under 
+`src/` *it will be read*.
 
-### scripts
-
-Contains Tcl, shell (bash), and batch (Windows) scripts for building the design
-as well as programming the device with the generated bitstream.
-
-## Building the design
-
-### The Easy Way
+Once all of your source design files, constraints, and IP are ready, you can
+create a bitstream using
 
 ```shell
 make bitstream
 ```
 
-### Details
+And you can program the device using
 
-The script `build` is the main driver of the build process. This script accepts
-the following command line arguments:
+```shell
+make program_device
+```
 
-    --start_from  <step>
-                    If omitted, start the build process from the very
-                    beginning. Otherwise, open the checkpoint generated after 
-                    step <step> from a previous build, where <step> is one of
-                    'synth|opt|place|route' 
+The Makefile also provides other targets for design analysis. See `make help`
+for all options.
 
-    --run_to <step>
-                    If omitted, run all the way to the 'write_bitstream' step.
-                    Otherwise, stop after completing <step>, where <step> is
-                    one of 'synth|opt|place|route'
+## Creating a Project
 
-    --incremental <checkpoint file>
-                    Use the incremental compile flow with the provided 
-                    reference checkpoint file
+The make-based workflow is design to work in non-project flow. Non-project
+flow has many benefits, not the least of which is speed; however, there are 
+some things that are either much easier to do in project mode or that _must_ be
+done in project mode. For that purpose, you can easily create a project from
+your design sources using
 
-    --no_report
-                    Do not create reports (note that the timing summary report
-                    is created regardless after the route_design step, per
-                    Vivado requirements)
+```shell
+make project
+```
 
-    --no_debug     
-                    Disable debug mode. This option will prevent the build
-                    script from reading in any user-specified debug-specific
-                    constraints
+This will create a Vivado project under the `proj` directory.
 
-    --fast  
-                    Disable writing design checkpoints as well as writing
-                    reports. Not recommended.
+## Managing IP
 
-Both the bash script and the batch script act as wrappers around the Tcl
-script and contain similar arguments.
+Following Xilinx's recommendations, this design utilizes a managed IP project
+to generate and manage all project IP. To create IP for use in your design,
+open the managed IP project in Vivado and create and configure your IP from the
+IP catalog. Be sure that your IP is created in the `ip/` directory (this is the
+default). The Tcl build scripts look for IP files (either `.xci` or `.xcix`)
+underneath this directory.
 
-### program_device.tcl
+See chapter 3, "Using Manage IP Projects" of [Vivado User Guide: Designing With
+IP](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2018_1/ug896-vivado-ip.pdf)
+for more information.
 
-This script writes the bitstream to the connected FPGA. The user _must_ 
-configure this script prior to running it the first time to set the proper
-part/board name.
+## Simulating and Testing
 
-## Creating IP
+The `sim` directory contains files for simulation. Each module to be simulated should
+exist in its own directory, and each directory should contain a `.prj` file
+enumerating the source files used in that module and a top-level HDL testbench
+file. The test bench should should be self-checking and should fail (i.e. using
+an assert statement) if the simulation does not match expected output.
 
-To create IP to use in the design, open the `managed_ip_project` and create
-IP there. Be sure to use a remote location for IP (i.e. the ip/ directory) 
-and do not save new IP as "Local to Project". This should be the default
-setting.
+Example:
 
-*NOTE*: When you first clone the template, you must update the part in the 
-`managed_ip_project` project settings.
-
-Using core container is recommended but not necessary. Once new IP is created,
-there should be either a folder or a `.xcix` file in the `ip/` directory.
-You can either use a glob to match all IP in the `ip/` directory or you can
-enumerate the IP to use in the design explicitly (recommended). You will find
-these options in the User Configuration section of the `build.tcl` script.
+    sim/
+    --+ my_module/
+    ----+ my_module.prj
+    ----+ my_module_tb.vhd
+    ----+ golden_data.dat
+    ----+ input_data.dat
