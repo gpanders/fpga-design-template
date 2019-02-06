@@ -30,13 +30,13 @@ The Tcl scripts look for all source files under the `src` directory.
 HDL design files should go under `src/hdl/`, block designs should go in
 `src/bd/<bd_name>/`, and constraints under `src/xdc/`.
 
-*Constraints file are not read as globs and must be explicitly specified in the
-settings.conf file*. This is because it is Xilinx's recommended best practice
+**Constraints file are not read as globs and must be explicitly specified in the
+settings.conf file**. This is because it is Xilinx's recommended best practice
 to separate synthesis constraints from implementation constraints (see [Vivado
 User Guide: Using
 Constraints](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2018_3/ug903-vivado-using-constraints.pdf)).
 All other source files are read as globs, meaning if the file exists under 
-`src/` *it will be read*.
+`src/` it will be read.
 
 Once all of your source design files, constraints, and IP are ready, you can
 create a bitstream using
@@ -56,7 +56,7 @@ for all options.
 
 ## Creating a Project
 
-The make-based workflow is design to work in non-project flow. Non-project
+The make-based workflow is designed to work in non-project flow. Non-project
 flow has many benefits, not the least of which is speed; however, there are 
 some things that are either much easier to do in project mode or that _must_ be
 done in project mode. For that purpose, you can easily create a project from
