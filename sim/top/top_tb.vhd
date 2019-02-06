@@ -5,13 +5,13 @@ use IEEE.numeric_std.all;
 entity top_tb is
 end top_tb;
 
-architecture Bench of top_tb
+architecture Bench of top_tb is
 
   constant PERIOD : time := 10 ns;
   signal CLOCK : std_logic := '0';
   signal STOP_CLOCK : boolean := false;
 
-  signal OKAY : boolean <= true;
+  signal OKAY : boolean := true;
 
   signal a, b, c : natural;
 
@@ -29,13 +29,13 @@ begin
   main : process
   begin
     a <= 1;
-    wait for falling_edge(CLOCK);
+    wait until falling_edge(CLOCK);
 
     b <= 2;
-    wait for falling_edge(CLOCK);
+    wait until falling_edge(CLOCK);
 
     c <= a + b;
-    wait for falling_edge(CLOCK);
+    wait until falling_edge(CLOCK);
 
     if c /= 3 then
       OKAY <= false;
@@ -43,7 +43,7 @@ begin
 
     wait for 100 ns;
 
-    STOP_CLOCK <= false;
+    STOP_CLOCK <= true;
 
     assert OKAY report "Testbench failed" severity failure;
 
