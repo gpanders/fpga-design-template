@@ -11,7 +11,7 @@ for entity in sim/*; do
   top=${top_file%.*}
   xelab --prj $prj_file --nolog $top
   xsim $top --log $top.log -R
-  if grep "Failure" $top.log > /dev/null; then
+  if grep -q "Failure" $top.log; then
     rc=1
     failures=$(($failures + 1))
   fi

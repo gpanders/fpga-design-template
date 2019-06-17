@@ -21,8 +21,14 @@ ip/*/*
 !ip/*.xcix
 !ip/managed_ip_project/managed_ip_project.xpr
 
-# Block design output
-src/bd/
+# All block design output except IP
+src/bd/*/*
+!src/bd/*/*.bd
+!src/bd/*/*.bxml
+!src/bd/*/ip
+src/bd/*/ip/*/*
+!src/bd/**/ip/*/*.xci
+!src/bd/**/ip/*.xcix
 
 # Archived output of project and block design
 project.tar.gz
