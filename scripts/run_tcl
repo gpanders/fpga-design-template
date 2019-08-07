@@ -23,8 +23,8 @@ if [ -z "$VIVADO_OPTS" ]; then
   VIVADO_OPTS="-nojournal -log build.log"
 fi
 
-if [ -z "$PART" ]; then
-  echo "ERROR: Missing part name in settings.conf"
+if [ -z "$PART" -a -z "$BOARD_PART" ]; then
+  echo "ERROR: Missing board or part name in settings.conf"
   exit 1
 fi
 
@@ -39,11 +39,18 @@ IMPL_CONSTRAINTS=${IMPL_CONSTRAINTS##+( )}
 DEBUG_CONSTRAINTS=${DEBUG_CONSTRAINTS##+( )}
 IP_REPO_PATHS=${IP_REPO_PATHS##+( )}
 
-TCLARGS="--name $PROJECT_NAME --part $PART --top $TOP"
+TCLARGS="--name $PROJECT_NAME --top $TOP"
+
+if [ -n "$BOARD_PART" ]; then
+    TCLARGS="$TCLARGS --board $BOARD_PART"
+elif [ -n "$PART" ]; then
+    TCLARGS="$TCLARGS --part $PART"
+fi
+
 TCLARGS="$TCLARGS --synth_constraints ${SYNTH_CONSTRAINTS//+( )/,}"
 TCLARGS="$TCLARGS --impl_constraints ${IMPL_CONSTRAINTS//+( )/,}"
 TCLARGS="$TCLARGS --debug_constraints ${DEBUG_CONSTRAINTS//+( )/,}"
 TCLARGS="$TCLARGS --ip_repo_paths ${IP_REPO_PATHS//+( )/,}"
 TCLARGS="$TCLARGS ${@:2}"
 
-${VIVADO} ${VIVADO_OPTS} -mode tcl -source scripts/tcl/$1.tcl -notrace -tclargs $TCLARGS
+"${VIVADO}" ${VIVADO_OPTS} -mode tcl -source scripts/tcl/$1.tcl -notrace -tclargs $TCLARGS

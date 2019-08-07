@@ -17,6 +17,7 @@ if { $::argc > 0 } {
         switch -regexp -- $option {
             "--name"              { incr i; set name [lindex $::argv $i] }
             "--top"               { incr i; set top [lindex $::argv $i] }
+            "--board"             { incr i; set board [lindex $::argv $i] }
             "--part"              { incr i; set part [lindex $::argv $i] }
             "--synth_constraints" { incr i; set synth_constraints [split [lindex $::argv $i] ","] }
             "--impl_constraints"  { incr i; set impl_constraints [split [lindex $::argv $i] ","] }
@@ -53,7 +54,12 @@ set output_dir build
 file mkdir $output_dir
 
 # Set part
-set_part $part
+if {[info exists board]} {
+    set_part [get_property PART_NAME [get_board_parts $board]]
+    set_property BOARD_PART $board [current_project]
+} else {
+    set_part $part
+}
 
 # Enable XPMs
 set_property XPM_LIBRARIES {XPM_CDC XPM_MEMORY} [current_project]
@@ -63,7 +69,7 @@ if { $start_from == 0 } {
     set_property ip_repo_paths $ip_repo_paths [current_fileset]
     update_ip_catalog
 
-    set ips [glob ip/*.xcix ip/*/*.xci]
+    set ips [glob -nocomplain ip/*.xcix ip/*/*.xci]
     if { [llength $ips] } {
         # Read IP
         puts "Reading IP: $ips"
@@ -74,7 +80,7 @@ if { $start_from == 0 } {
     }
 
     # Read block design
-    set bds [glob src/bd/*/*.bd]
+    set bds [glob -nocomplain src/bd/*/*.bd]
     if { [llength $bds] } {
         foreach bd $bds {
             puts "Reading block design: $bd"
@@ -110,7 +116,7 @@ if { $start_from < 1 } {
     set now [clock seconds]
     puts "Starting synth_design at [clock format $now -format %H:%M:%S]"
 
-    synth_design -top $top -part $part -flatten rebuilt
+    synth_design -top $top -flatten rebuilt
 
     if { $write_dcp} { write_checkpoint -force $output_dir/${top}_synth }
 
